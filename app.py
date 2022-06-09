@@ -67,6 +67,25 @@ def add_user():
 
     return jsonify(user_schema.dump(new_user))
 
+@app.route('/user/check', methods=['POST'])
+def verify_user():
+    if request.content_type != 'application/json':
+        return jsonify('Error: Data must be json')
+
+    post_data = request.get_json()
+    email = post_data.get('email')
+    password = post_data.get('password')
+
+    user = db.session.query(User).filter(User.username == username).first()
+
+    if user is None:
+        return jsonify("User not checked")
+
+    if bcrypt.check_password_hash(user.password, password) == False:
+        return jsonify("User not checked")
+
+    return jsonify(user_schema.dump(user))
+
 @app.route('/user/get', methods=['GET'])
 def get_all_users():
     all_users = db.session.query(User).all()
