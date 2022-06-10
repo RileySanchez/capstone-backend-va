@@ -28,12 +28,12 @@ class VaResources(db.Model):
         self.description = description
 
 
-class VaResourceSchema(ma.Schema):
-    class Meta: 
+class VaResourcesSchema(ma.Schema):
+    class Meta:
         fields = ("id", "title", "description")
 
-va_item_schema = VaResourceSchema()
-multiple_va_item_schema = VaResourceSchema(many=True)
+va_item_schema = VaResourcesSchema()
+multiple_va_item_schema = VaResourcesSchema(many=True)
 
 
 @app.route('/varesources/add', methods=["POST"])
@@ -63,19 +63,19 @@ def add_va_item():
 
 @app.route('/varesources/get', methods=["GET"])
 def get_va_items():
-    items = db.session.query(GearItem).all()
-    return jsonify(multiple_gear_item_schema.dump(items))
+    items = db.session.query(VaResources).all()
+    return jsonify(multiple_va_item_schema.dump(items))
 
 
 @app.route('/varesources/get/<id>', methods=["GET"])
 def get_va_item_by_id(id):
-    item = db.session.query(GearItem).filter(GearItem.id == id).first()
-    return jsonify(gear_item_schema.dump(item))
+    item = db.session.query(GearItem).filter(VaResources.id == id).first()
+    return jsonify(va_item_schema.dump(item))
 
 
 @app.route('/varesources/delete/<id>', methods=["DELETE"])
 def delete_va_item(id):
-    item = db.session.query(VaResource).filter(VaResource.id == id).first()
+    item = db.session.query(VaResources).filter(VaResources.id == id).first()
     db.session.delete(item)
     db.session.commit()
 
@@ -101,4 +101,4 @@ def delete_va_item(id):
 
 
     db.session.commit()
-    return jsonify("VaResource has been updated.")
+    return jsonify("VaResource have been updated.")
