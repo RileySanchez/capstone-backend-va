@@ -1,110 +1,104 @@
 from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
-from flask_cors import CORS
-from flask_bcrypt import Bcrypt, generate_password_hash, check_password_hash
+from flask_sqlalchemy import SQLAlchemy 
+from flask_marshmallow import Marshmallow 
+from flask_cors import CORS 
 from dotenv import load_dotenv
+
 import os
 
 load_dotenv()
 
-database_url = "postgresql:" + ":".join(os.environ.get("DATABASE_URL", "").split(":")[1:])
+database_url = "postgresql:" + ":".join(os.environ.get('DATABASE_URL', "").split(":")[1:])
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
-bcrypt = Bcrypt(app)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(basedir, "app.sqlite")
 CORS(app)
 
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-
-class User(db.Model):
+class VaResources(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String, unique=True, nullable=False)
-    password = db.Column(db.String(20), nullable=False)
+    title = db.Column(db.String, nullable=False)
+    description = db.Column(db.String, nullable=False)
 
 
-
-    def __init__(self, email, password):
-        self.email = email
-        self.password = password
-
-
-class UserSchema(ma.Schema):
-    class Meta:
-        fields = ('id', 'email', 'password')
+    def __init__(self, title, description):
+        self.title = title
+        self.description = description
 
 
-user_schema = UserSchema()
-multiple_user_schema = UserSchema(many=True)
+class VaResourceSchema(ma.Schema):
+    class Meta: 
+        fields = ("id", "title", "description")
 
-@app.route('/user/add', methods=['POST'])
-def add_user():
+va_item_schema = VaResourceSchema()
+multiple_va_item_schema = VaResourceSchema(many=True)
+
+
+@app.route('/varesources/add', methods=["POST"])
+def add_va_item():
     if request.content_type != 'application/json':
         return jsonify('Error: Data must be json')
 
     post_data = request.get_json()
-    email = post_data.get('email')
-    password = post_data.get('password')
+    title = post_data.get('title')
 
 
-    username_duplicate = db.session.query(User).filter(User.username == username).first()
+    item = db.session.query(VaResource).filter(VaResource.title == title).first()
 
-    if username_duplicate is not None:
-        return jsonify("Error: The username is already registered.")
+    if title == None:
+        return jsonify("Error: Data must have a 'title' key.")
 
-    email_duplicate = db.session.query(User).filter(User.username == username).first()
+    if description == None:
+        return jsonify("Error: Data must have a 'description' key.")
 
-    if email_duplicate is not None:
-        return jsonify("Error: The email is already registered.")
 
-    encrypted_password = bcrypt.generate_password_hash(password).decode('utf-8')
-    new_user = User(username, encrypted_password, email, img)
-
-    db.session.add(new_user)
+    new_item = VaResource(title, description)
+    db.session.add(new_resource)
     db.session.commit()
 
-    return jsonify(user_schema.dump(new_user))
-
-@app.route('/user/check', methods=['POST'])
-def verify_user():
-    if request.content_type != 'application/json':
-        return jsonify('Error: Data must be json')
-
-    post_data = request.get_json()
-    email = post_data.get('email')
-    password = post_data.get('password')
-
-    user = db.session.query(User).filter(User.username == username).first()
-
-    if user is None:
-        return jsonify("User not checked")
-
-    if bcrypt.check_password_hash(user.password, password) == False:
-        return jsonify("User not checked")
-
-    return jsonify(user_schema.dump(user))
-
-@app.route('/user/get', methods=['GET'])
-def get_all_users():
-    all_users = db.session.query(User).all()
-    return jsonify(multiple_user_schema.dump(all_users))
+    return jsonify("You've added a new varesources item!")
 
 
-@app.route('/user/get/<id>', methods=["GET"])
-def get_user_by_id(id):
-    user = db.session.query(User).filter(User.id == id).first()
-    return jsonify(user_schema.dump(user))
+@app.route('/varesources/get', methods=["GET"])
+def get_va_items():
+    items = db.session.query(GearItem).all()
+    return jsonify(multiple_gear_item_schema.dump(items))
 
 
-@app.route('/user/delete/<id>', methods=['DELETE'])
-def delete_user_by_id(id):
-    user = db.session.query(User).filter(User.id == id).first()
-    db.session.delete(user)
+@app.route('/varesources/get/<id>', methods=["GET"])
+def get_va_item_by_id(id):
+    item = db.session.query(GearItem).filter(GearItem.id == id).first()
+    return jsonify(gear_item_schema.dump(item))
+
+
+@app.route('/varesources/delete/<id>', methods=["DELETE"])
+def delete_va_item(id):
+    item = db.session.query(VaResource).filter(VaResource.id == id).first()
+    db.session.delete(item)
     db.session.commit()
 
-    return jsonify("The user has been deleted")
+    return jsonify("The VA Resource has been deleted")
 
-if __name__ == "__main__":
-    app.run(debug=True)
+
+# @app.route('/varesources/update/<id>', methods=["PUT", "PATCH"])
+# def update_va_item_by_id(id):
+#     if request.content_type != 'application/json':
+#         return jsonify('Error: Data must be json')
+
+#     post_data = request.get_json()
+#     title = post_data.get('title')
+#     description = post_data.get('description')
+
+
+#     item = db.session.query(VaResource).filter(VaResource.id == id).first()
+
+#     if title != None:
+#         item.title = title
+#     if description != None:
+#         item.description = description
+
+
+    db.session.commit()
+    return jsonify("VaResource has been updated.")
