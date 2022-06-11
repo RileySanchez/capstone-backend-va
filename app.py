@@ -8,9 +8,10 @@ import os
 
 load_dotenv()
 
-database_url = "postgresql:" + ":".join(os.environ.get('DATABASE_URL', "").split(":")[1:])
 app = Flask(__name__)
+database_url = "postgresql:" + ":".join(os.environ.get('DATABASE_URL', "").split(":")[1:])
 basedir = os.path.abspath(os.path.dirname(__file__))
+
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
@@ -43,9 +44,9 @@ def add_va_item():
 
     post_data = request.get_json()
     title = post_data.get('title')
+    description = post_data.get('description')
 
-
-    item = db.session.query(VaResource).filter(VaResource.title == title).first()
+    item = db.session.query(VaResources).filter(VaResources.title == title).first()
 
     if title == None:
         return jsonify("Error: Data must have a 'title' key.")
@@ -54,8 +55,8 @@ def add_va_item():
         return jsonify("Error: Data must have a 'description' key.")
 
 
-    new_item = VaResource(title, description)
-    db.session.add(new_resource)
+    new_item = VaResources(title, description)
+    db.session.add(new_item)
     db.session.commit()
 
     return jsonify("You've added a new varesources item!")
@@ -69,7 +70,7 @@ def get_va_items():
 
 @app.route('/varesources/get/<id>', methods=["GET"])
 def get_va_item_by_id(id):
-    item = db.session.query(GearItem).filter(VaResources.id == id).first()
+    item = db.session.query(VaResources).filter(VaResources.id == id).first()
     return jsonify(va_item_schema.dump(item))
 
 
@@ -101,4 +102,24 @@ def delete_va_item(id):
 
 
     db.session.commit()
-    return jsonify("VaResource have been updated.")
+    return jsonify("VaResources have been updated.")
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+  app.run(debug=True)
+
+
+
+
+
+
+
+
+
+
